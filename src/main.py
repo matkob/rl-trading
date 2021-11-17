@@ -3,11 +3,11 @@ import tensortrade.oms.services.execution.simulated as simulated
 import tensortrade.agents as agents
 import pandas as pd
 import features as ft
+import feed
 
 from tensortrade.oms.exchanges import Exchange
 from tensortrade.oms.instruments import USDT, BTC
 from tensortrade.oms.wallets import Wallet, Portfolio
-from feed import Feed
 
 
 def extract_features(quotes: pd.DataFrame) -> pd.DataFrame:
@@ -22,13 +22,8 @@ def extract_features(quotes: pd.DataFrame) -> pd.DataFrame:
     return features
 
 
-def transform_trades(trades: pd.DataFrame) -> pd.DataFrame:
-    trades["datetime"] = pd.to_datetime(trades["timestamp"], unit="us")
-    return trades
-
-
-feed = Feed.load("data/", lambda df: df, transform_trades, extract_features, nrows=10000)
-binance = Exchange("binance", service=simulated.execute_order)(feed.get_mid_price().rename("USDT-BTC"))
+feed = feed.TimeBasedFeed("data/", lambda df: df, lambda df: df, extract_features, nrows=10000)
+binance = Exchange("binance", service=simulated.execute_order)(feed.get_price().rename("USDT-BTC"))
 portfolio = Portfolio(USDT, [
     Wallet(binance, 10000 * USDT),
     Wallet(binance, 1 * BTC)
@@ -43,9 +38,9 @@ env = default.create(
     window_size=20
 )
 
-n_steps = 100
-n_episodes = 100
-agent = agents.DQNAgent(env)
+n_steps = 10000
+n_episodes = 5
+agent = agents.A2CAgent(env)
 # setting render interval to huge number will result in just one, final summary
-agent.train(n_steps=n_steps, n_episodes=n_steps, save_path="agents/", render_interval=99999999999999)
+agent.train(n_steps=n_steps, n_episodes=n_episodes, save_path="agents/", render_interval=99999999999999)
 agent.env.render(episode=n_episodes, max_episodes=n_episodes, max_steps=n_steps)
