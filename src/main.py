@@ -4,6 +4,7 @@ import tensortrade.agents as agents
 import pandas as pd
 import features as ft
 import feed
+import reward
 
 from tensortrade.oms.exchanges import Exchange
 from tensortrade.oms.instruments import USDT, BTC
@@ -31,15 +32,15 @@ portfolio = Portfolio(USDT, [
 env = default.create(
     portfolio=portfolio,
     action_scheme=default.actions.ManagedRiskOrders(),
-    reward_scheme=default.rewards.RiskAdjustedReturns(),
+    reward_scheme=reward.TradeCompletion(rpnl_threshold=0.01, reward_asymmetry=2),
     feed=feed.get_features(),
     renderer_feed=feed.get_candles(),
     renderer=default.renderers.PlotlyTradingChart(),
     window_size=20
 )
 
-n_steps = 10000
-n_episodes = 5
+n_steps = 100
+n_episodes = 500
 agent = agents.A2CAgent(env)
 # setting render interval to huge number will result in just one, final summary
 agent.train(n_steps=n_steps, n_episodes=n_episodes, save_path="agents/", render_interval=99999999999999)

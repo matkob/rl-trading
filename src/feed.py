@@ -1,12 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Callable, List, Tuple
-from pandas.core.resample import Resampler
+from typing import Callable, List
 from tensortrade.feed.core import Stream, DataFeed
 
 import pandas as pd
 import requests
 import os
-import features as ft
 
 
 class ResampledFeed(ABC):
